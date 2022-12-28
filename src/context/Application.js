@@ -1,8 +1,9 @@
 import { createContext, useContext, useMemo, useRef } from "react";
+import ModelContextProvider from "./Model";
 
 const ApplicationContext = createContext();
 
-export const ApplicationContextProvider = (props) => {
+const ApplicationContextProvider = (props) => {
   const { children } = props;
 
   const storage = useRef(new Map());
@@ -32,7 +33,7 @@ export const ApplicationContextProvider = (props) => {
 
   return (
     <ApplicationContext.Provider value={actions}>
-      {children}
+      <ModelContextProvider>{children}</ModelContextProvider>
     </ApplicationContext.Provider>
   );
 };
