@@ -8,34 +8,51 @@ class Base {
   }
 
   createInstance(options) {
-    const { baseUrl, headers, params, data } = options || {};
+    const { baseUrl, headers, params, data, cache } = options || {};
+
+    const _cache = {
+      policy: false,
+      expiration_time: 60 * 60 * 5,
+      ...cache,
+    };
 
     const instance = axios.create({
       baseURL: baseUrl || process.env.REACT_APP_BASE_URL,
       headers,
       params,
       data,
+      cache: _cache,
     });
 
     instance.interceptors.request.use((config) => {
-      const { cache } = config;
+      const { policy } = config.cache;
 
       const _config = {
         ...config,
       };
 
-      if (cache) {
+      if (policy) {
         const key = JSON.stringify(config);
 
         const cache_data = this.actions.storage.get(key);
 
         if (cache_data) {
-          const controller = new AbortController();
+          const { data, expiration_time } = cache_data;
 
-          _config.signal = controller.signal;
-          _config.data = cache_data;
+          const now = new Date().getTime();
 
-          controller.abort();
+          const is_expiration = now > expiration_time;
+
+          if (is_expiration) {
+            this.actions.storage.delete(key);
+          } else {
+            const controller = new AbortController();
+
+            _config.signal = controller.signal;
+            _config.data = data;
+
+            controller.abort();
+          }
         }
       }
 
@@ -45,11 +62,15 @@ class Base {
     instance.interceptors.response.use(
       (response) => {
         const { config, data } = response;
+        const { policy, expiration_time } = config.cache;
 
-        if (config.cache) {
+        if (policy) {
           const key = JSON.stringify(config);
 
-          this.actions.storage.set(key, data);
+          this.actions.storage.set(key, {
+            data,
+            expiration_time: new Date().getTime() + expiration_time,
+          });
         }
 
         return response.data;
