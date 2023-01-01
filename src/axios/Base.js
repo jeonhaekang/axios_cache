@@ -12,7 +12,7 @@ class Base {
 
     const _cache = {
       policy: false,
-      expiration_time: 60 * 60 * 5,
+      expiration_time: 60 * 1000 * 5,
       ...cache,
     };
 
@@ -44,8 +44,10 @@ class Base {
           const is_expiration = now > expiration_time;
 
           if (is_expiration) {
+            console.log("만료된 캐시 데이터");
             this.actions.storage.delete(key);
           } else {
+            console.log("캐시 데이터 호출");
             const controller = new AbortController();
 
             _config.signal = controller.signal;
@@ -65,6 +67,7 @@ class Base {
         const { policy, expiration_time } = config.cache;
 
         if (policy) {
+          console.log("데이터 캐시");
           const key = JSON.stringify(config);
 
           this.actions.storage.set(key, {
