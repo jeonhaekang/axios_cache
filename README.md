@@ -1,70 +1,65 @@
-# Getting Started with Create React App
+# axios interceptors caching practice
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 설명
 
-## Available Scripts
+axios의 interceptors를 활용한 데이터 caching 연습
+![](https://velog.velcdn.com/images/1003gorkd/post/cde8de38-736e-41d9-b7e2-78f50c353851/image.gif)
+<br/><br/>
 
-In the project directory, you can run:
+## 작업 과정
+https://velog.io/@1003gorkd/React-axios-interceptors-%EB%A5%BC-%ED%99%9C%EC%9A%A9%ED%95%9C-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%BA%90%EC%8B%B1
 
-### `npm start`
+## 시작 방법
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+step1.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+$npm install
+```
 
-### `npm test`
+step2.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+$npm start
+```
 
-### `npm run build`
+step3. <br/>
+.env 파일 등록
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+REACT_APP_BASE_URL=END_POINT_URL
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 사용 예제
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+기본 값 : 캐싱 미사용, 만료시간 5분<br/>
 
-### `npm run eject`
+동일 인스턴스에 캐싱 적용 : 인스턴스 생성 시 지정
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```javascript
+// axios/YesNo.js
+instance = this.createInstance({
+  cache: { policy: true, expiration_time: 1000 * 5 },
+});
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+개별 API에 캐싱 적용 : 개별 API생성 시 지정
+```javascript
+// axios/YesNo.js
+getYesOrNo() {
+  return this.instance.get(this.path, {
+    cache:{ policy:true, expiration_time: 1000 * 5 }
+  });
+}
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+호출 방법 : useAxios hooks를 통해 호출
+```javascript
+// App.js
+const { yes_no } = useAxios();
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+const updateYesOrNo = async () => {
+  const response = await yes_no.getYesOrNo();
+  ...
+};
+```
