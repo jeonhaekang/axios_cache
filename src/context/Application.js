@@ -1,5 +1,4 @@
 import { createContext, useContext, useMemo, useRef } from "react";
-import ModelContextProvider from "./Model";
 
 const ApplicationContext = createContext();
 
@@ -25,23 +24,21 @@ const ApplicationContextProvider = (props) => {
     };
   }, []);
 
-  const actions = useMemo(() => {
+  const values = useMemo(() => {
     return {
       storage: _storage,
     };
   }, [_storage]);
 
   return (
-    <ApplicationContext.Provider value={actions}>
-      <ModelContextProvider>{children}</ModelContextProvider>
+    <ApplicationContext.Provider value={values}>
+      {children}
     </ApplicationContext.Provider>
   );
 };
 
 export const useApplicationContext = () => {
-  const c = useContext(ApplicationContext);
-
-  return c;
+  return useContext(ApplicationContext);
 };
 
 export default ApplicationContextProvider;

@@ -1,57 +1,43 @@
 import axios from "axios";
 
-class Base {
-  actions = null;
+const DEFAULT_OPTIONS = {
+  baseURL: process.env.REACT_APP_BASE_URL,
+  cache: { policy: false, expiration_time: 1000 * 60 * 5 },
+};
 
-  constructor(instance_actions) {
-    this.actions = instance_actions;
+class Base {
+  storage = null;
+
+  constructor(storage) {
+    this.storage = storage;
   }
 
   createInstance(options) {
-    const { baseUrl, headers, params, data, cache } = options || {};
+    const merge_options = { ...DEFAULT_OPTIONS, ...options };
 
-    const _cache = {
-      policy: false,
-      expiration_time: 60 * 1000 * 5,
-      ...cache,
-    };
-
-    const instance = axios.create({
-      baseURL: baseUrl || process.env.REACT_APP_BASE_URL,
-      headers,
-      params,
-      data,
-      cache: _cache,
-    });
+    const instance = axios.create(merge_options);
 
     instance.interceptors.request.use((config) => {
-      const { policy } = config.cache;
-
-      const _config = {
-        ...config,
-      };
+      const _config = { ...config };
+      const { policy } = _config.cache;
 
       if (policy) {
-        const key = JSON.stringify(config);
+        const cache_key = JSON.stringify(_config);
 
-        const cache_data = this.actions.storage.get(key);
+        const cache_data = this.storage.get(cache_key);
 
         if (cache_data) {
-          const { data, expiration_time } = cache_data;
-
           const now = new Date().getTime();
 
-          const is_expiration = now > expiration_time;
+          const is_expiration = now > cache_data.expiration_time;
 
           if (is_expiration) {
-            console.log("만료된 캐시 데이터");
-            this.actions.storage.delete(key);
+            this.storage.delete(cache_key);
           } else {
-            console.log("캐시 데이터 호출");
             const controller = new AbortController();
 
             _config.signal = controller.signal;
-            _config.data = data;
+            _config.data = cache_data.data;
 
             controller.abort();
           }
@@ -59,7 +45,7 @@ class Base {
       }
 
       return _config;
-    });
+    }, []);
 
     instance.interceptors.response.use(
       (response) => {
@@ -67,10 +53,9 @@ class Base {
         const { policy, expiration_time } = config.cache;
 
         if (policy) {
-          console.log("데이터 캐시");
-          const key = JSON.stringify(config);
+          const cache_key = JSON.stringify(config);
 
-          this.actions.storage.set(key, {
+          this.storage.set(cache_key, {
             data,
             expiration_time: new Date().getTime() + expiration_time,
           });
